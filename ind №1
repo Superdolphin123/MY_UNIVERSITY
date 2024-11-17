@@ -1,0 +1,146 @@
+#include <stdio.h>
+#include <math.h>
+#include <locale.h>
+
+// Константы
+const double LEFT_B = -2.0;         // Левая граница отрезка
+const double RIGHT_B = 6.0;        // Правая граница отрезка
+const double STEP = 0.05;          // Шаг табулирования
+const double MAX_P = 3.0;          // Макс допустимое значение p
+const int ROWS_ON_PAGE = 10;       // Кол-во строк на одной странице
+const int PAIRS_ON_LINE = 2;       // Кол-во аргументов и функций в строке
+const int ARG_W = 10;              // Ширина столбца для аргумента
+const int FUNC_W = 12;             // Ширина столбца для функции
+const int ARG_DEC = 4;             // Кол-во знаков после запятой для аргумента
+const int FUNC_DEC = 4;            // Кол-во знаков после запятой для функции
+
+double f(double x, double p);
+void print_table(double p);
+
+int main()
+{
+    setlocale(LC_ALL, "Rus");
+    double p;
+
+    do
+    {
+        printf("Enter p (|p| <= %.2f): ", MAX_P);
+        scanf("%lf", &p);
+        if (fabs(p) > MAX_P)
+        {
+            printf("Error: |p| should be <= %.2f. Try again.\n", MAX_P);
+        }
+    } while (fabs(p) > MAX_P);
+
+    print_table(p);
+
+    return 0;
+}
+
+double f(double x, double p)
+{
+    if (pow(x, 7) < fabs(p))
+    {
+        return sqrt(0.25 + exp(x * p));
+    }
+    else
+    {
+        return log10(x / (M_PI + atan(p * x) * atan(p * x)));
+    }
+}
+
+void print_table(double p)
+{
+    int row_c = 0;
+    int page_num = 1;
+    double x = LEFT_B;
+    int printed_xy = 0;
+    const int table_width = PAIRS_ON_LINE * (ARG_W + FUNC_W + 2);
+
+    printf("Table of function values at p = %.2f\n", p);
+
+    while (x <= RIGHT_B + STEP / 2) // Построение таблицы
+    {
+        if (row_c == 0 && printed_xy == 0)
+        {
+            // Центрируем заголовок страницы
+            printf("\n%*sPage %d\n", ((table_width + 7) / 2) - 5, "", page_num++);
+
+            for (int i = 0; i < PAIRS_ON_LINE; i++)
+            {
+                printf("|");
+                for (int j = 0; j < ARG_W; j++) {
+                    printf("*");
+                }
+                printf("|");
+                for (int j = 0; j < FUNC_W; j++) {
+                    printf("*");
+                }
+            }
+            printf("|\n");
+
+            // Шапка
+            for (int i = 0; i < PAIRS_ON_LINE; i++)
+            {
+                printf("|%*s|%*s", ARG_W, "x", FUNC_W, "f(x)");
+            }
+            printf("|\n");
+
+            for (int i = 0; i < PAIRS_ON_LINE; i++)
+            {
+                printf("|");
+                for (int j = 0; j < ARG_W; j++) printf("*");
+                printf("|");
+                for (int j = 0; j < FUNC_W; j++) printf("*");
+            }
+            printf("|\n");
+        }
+
+        // Пары значение-функция
+        printf("|%*.*f|%*.*f", ARG_W, ARG_DEC, x, FUNC_W, FUNC_DEC, f(x, p));
+        printed_xy++;
+
+        if (printed_xy == PAIRS_ON_LINE)
+        {
+            printf("|\n");
+            printed_xy = 0;
+            row_c++;
+        }
+
+        // Граница таблицы
+        if (row_c == ROWS_ON_PAGE)
+        {
+            row_c = 0;
+
+            for (int i = 0; i < PAIRS_ON_LINE; i++)
+            {
+                printf("|");
+                for (int j = 0; j < ARG_W; j++) printf("*");
+                printf("|");
+                for (int j = 0; j < FUNC_W; j++) printf("*");
+            }
+            printf("|\n");
+
+            printf("\nPress Enter to continue \n");
+            getchar(); getchar();
+        }
+
+        x += STEP;
+    }
+
+    // Завершение таблицы
+    if (printed_xy > 0)
+    {
+        printf("|\n");
+
+        for (int i = 0; i < PAIRS_ON_LINE; i++)
+        {
+            printf("|");
+            for (int j = 0; j < ARG_W; j++) printf("*");
+            printf("|");
+            for (int j = 0; j < FUNC_W; j++) printf("*");
+        }
+        printf("|\n");
+        printf("END\n");
+    }
+}
